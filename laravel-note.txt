@@ -1,0 +1,77 @@
+# Creating a new Project 
+    - composer create-project laravel/laravel project_name
+
+# Controllers 
+    -> For better code base you use controllers to handle functionality of the application on individual controllers for each functionality in the application 
+
+    - Ex. php artisan make:controller UserController 
+        -> In controller 
+            public function register(){}
+
+        -> Router access will be something like 
+            Route::post("/register", [UserController::class, "register"])
+                                        controller_name , method_name_in_controller
+
+# Validating Form Submits 
+    -> When you create the register method create the Request object as $request then you can you use it to validate the incoming data and make sure Ex. if there required or have a default value , it uses name so make sure to set the name in the input values
+        $incomingFields = $request->validate([
+            "username" => "required",
+            "email" => ["required", "email"],
+            "password" => ["required", "min:8", "max:200"], // you can set array values for the validation
+        ]);
+
+# Database 
+    # Initial setup 
+        - php artisan migrate : executes all the pending migration applying the changes to the database and if it doesn't exist it will create it. 
+
+        Ex. In the case of Registration 
+            - After validation and Before returning the correct response or acknowledgment
+            -> Create a new Instance the users register model 
+                - Hash the incoming password 
+                    $incomingFields['password'] = bcrypt($incomingFields['password'])
+                - using the default laravel User model from App\Models\User create a user instance in the users table
+                    User::create($incomingFields)
+
+    # Creating DB Tables 
+        - php artisan make:migration create_posts_table
+        - after you edit the default migration table artisan has created you need to migrate to re execute any new migrations 
+            + php artisan migrate 
+
+# Creating a model 
+    - For a table u created that should be in a plural (posts) form the model for the single instance should be a title case singular version of the same word "Post"
+        + php artisan make:model Post 
+
+        + edit the Post model by adding the protect fillable arrays of the column names of the model 
+    
+    - Which then you can use to create the row in the table using the model by importing it 
+        Post::create($incomingField);
+    
+    - then returning the redirect to the home page 
+        
+
+# Sessions and Cookies [ Login and Logout ]
+    # Login 
+        # Registration
+            - After creating the User model for the incomingFields we create a user based on the model where we use global utility auth function and its login method with the current user 
+                auth()->login($user)
+            - then we redirect the user to the logged page
+                return redirect("/")
+
+        # From Login Form 
+            - we validate the incoming request fields 
+            - using the auth utility we check the attempt using name and password associative array then if the username and password match we regenerate the session 
+                if (auth()->attempt([
+                    'name' => $incomingFields["name"],
+                    'password' => $incomingFields["password"],
+                ])){
+                    $request->session()->regenerate();
+                }
+
+            - then return the redirect to the home directory
+
+
+    # Logout 
+        - create a form to invoke the route where the controller methods is a function that logs out the current logged in user using the auth utilities logout method 
+            - auth()->logout();
+        - then we redirect the user to the home page 
+            return redirect("/")
